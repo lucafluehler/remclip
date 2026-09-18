@@ -1,0 +1,22 @@
+{
+  "manifestVersion": 1,
+  "id": "remclip",
+  "name": "RemClip",
+  "author": "lucaf",
+  "repoUrl": "",
+  "version": {
+    "major": 0,
+    "minor": 1,
+    "patch": 0
+  },
+  "theme": [],
+  "enableOnMobile": false,
+  "description": "Copy the current document as clean, AI-friendly Markdown.",
+  "requestNative": false,
+  "requiredScopes": [
+    {
+      "type": "All",
+      "level": "Read"
+    }
+  ]
+}

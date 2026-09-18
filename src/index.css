@@ -1,0 +1,43 @@
+.remclip-widget {
+  display: flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 2px 0;
+}
+
+.remclip-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--rn-clr-border-primary, rgba(127, 127, 127, 0.32));
+  border-radius: 6px;
+  background: var(--rn-clr-background-secondary, transparent);
+  color: var(--rn-clr-content-primary, inherit);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 20px;
+  padding: 2px 8px;
+  transition: background-color 120ms ease, border-color 120ms ease, opacity 120ms ease;
+}
+
+.remclip-button:hover:not(:disabled) {
+  background: var(--rn-clr-background-tertiary, rgba(127, 127, 127, 0.12));
+}
+
+.remclip-button:focus-visible {
+  outline: 2px solid var(--rn-clr-content-accent, #4f7cff);
+  outline-offset: 2px;
+}
+
+.remclip-button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.remclip-icon {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
