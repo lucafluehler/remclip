@@ -65,7 +65,3 @@ http://localhost:8080
 ```
 
 If a development plugin prevents RemNote from loading, open RemNote with `?disablePlugins` as described in the official plugin documentation.
-
-## Project status
-
-The implementation plan and decisions are recorded in [PLAN.md](PLAN.md). Repository setup and publishing are intentionally deferred.
