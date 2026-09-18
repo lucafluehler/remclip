@@ -2,20 +2,25 @@
 
 RemClip is a small, read-only RemNote plugin that copies the current document as compact, AI-friendly Markdown.
 
-The plugin adds a **Copy AI Markdown** button above the document toolbar. It reads the open document, serializes its Rem hierarchy, cleans exporter-specific syntax, writes the result to the clipboard, and displays a toast.
+The plugin adds a compact clipboard icon to RemNote's document header alongside its built-in controls. It reads the document in the focused pane, serializes its Rem hierarchy, cleans exporter-specific syntax, writes the result to the clipboard, and displays a toast.
 
 ## Output behavior
 
 RemClip:
 
-- Preserves the document hierarchy as nested Markdown bullets.
+- Preserves the document hierarchy as four-space-indented Markdown bullets.
+- Preserves H1/H2/H3 headings and the document-title heading.
+- Preserves RemNote card semantics: concepts (`::`), descriptors (`;;`),
+  disabled descriptors (`;-`), basic forward cards (`→`), and multiline cards
+  (`>>>`).
 - Removes RemNote tags such as `#[[Analysis II]]`.
 - Normalizes `;;<` cards to `;;`.
 - Keeps cloze text while removing cloze markup.
 - Removes images completely.
 - Keeps link labels while removing URLs.
-- Collapses block math to one physical line.
+- Collapses block math to one physical line without padding inside `$$`.
 - Removes blank lines and joins continuation lines.
+- Removes `query:` artifacts introduced by multiline-card structures.
 - Flattens multiline `formal definition` cards into a single `;;` card.
 
 It does not modify the knowledge base, send analytics, call an AI service, or make external network requests.

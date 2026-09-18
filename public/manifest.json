@@ -2,8 +2,8 @@
   "manifestVersion": 1,
   "id": "remclip",
   "name": "RemClip",
-  "author": "lucaf",
-  "repoUrl": "",
+  "author": "lucafluehler",
+  "repoUrl": "https://github.com/lucafluehler/remclip",
   "version": {
     "major": 0,
     "minor": 1,
@@ -12,7 +12,7 @@
   "theme": [],
   "enableOnMobile": false,
   "description": "Copy the current document as clean, AI-friendly Markdown.",
-  "requestNative": false,
+  "requestNative": true,
   "requiredScopes": [
     {
       "type": "All",
