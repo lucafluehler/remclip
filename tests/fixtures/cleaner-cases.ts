@@ -33,7 +33,7 @@ export const cleanerCases: CleanerCase[] = [
   {
     name: 'collapses multiline block math',
     input: '$$\n  n_1 \\sin \\theta_1\n  = n_2 \\sin \\theta_2\n$$',
-    expected: '$$ n_1 \\sin \\theta_1 = n_2 \\sin \\theta_2 $$',
+    expected: '$$n_1 \\sin \\theta_1 = n_2 \\sin \\theta_2$$',
   },
   {
     name: 'joins physical continuation lines and removes empty lines',
@@ -44,6 +44,6 @@ export const cleanerCases: CleanerCase[] = [
     name: 'applies interacting transformations in a stable order',
     input:
       'See {{c1::[Snell\'s law](https://example.com)}} #[[Optics]]\n![](image.png)\n$$\n x = y\n$$',
-    expected: "See Snell's law $$ x = y $$",
+    expected: "See Snell's law $$x = y$$",
   },
 ];

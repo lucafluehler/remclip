@@ -1,15 +1,52 @@
 import { cleanRichTextMarkdown } from './clean-rich-text';
 import type { ExportNode } from './types';
 
+const INDENT = '    ';
+const CONCEPT_REM_TYPE = 1;
+const DESCRIPTOR_REM_TYPE = 2;
+
+function cardDelimiter(node: ExportNode): string {
+  if (node.remType === CONCEPT_REM_TYPE) {
+    return {
+      forward: ':>',
+      backward: ':<',
+      both: '::',
+      none: ':-',
+    }[node.practiceDirection];
+  }
+
+  if (node.remType === DESCRIPTOR_REM_TYPE) {
+    return {
+      forward: ';;',
+      backward: ';<',
+      both: ';;',
+      none: ';-',
+    }[node.practiceDirection];
+  }
+
+  return {
+    forward: '→',
+    backward: '←',
+    both: '↔',
+    none: '→',
+  }[node.practiceDirection];
+}
+
+function headingPrefix(node: ExportNode): string {
+  return node.fontSize ? `${'#'.repeat(Number(node.fontSize.slice(1)))} ` : '';
+}
+
 function nodeOwnContent(node: ExportNode): string {
   const front = cleanRichTextMarkdown(node.frontMarkdown);
   const back = cleanRichTextMarkdown(node.backMarkdown);
 
   if (front && back) {
-    return `${front};;${back}`;
+    const gap = back.trimStart().startsWith('$$') ? ' ' : '';
+    return `${headingPrefix(node)}${front}${cardDelimiter(node)}${gap}${back}`;
   }
 
-  return front || back;
+  const content = front || back;
+  return content ? `${headingPrefix(node)}${content}` : '';
 }
 
 function visibleMatchText(markdown: string): string {
@@ -21,7 +58,10 @@ function visibleMatchText(markdown: string): string {
 }
 
 function isFormalDefinition(node: ExportNode): boolean {
-  if (!node.isCardItem || cleanRichTextMarkdown(node.backMarkdown) || node.children.length === 0) {
+  if (
+    cleanRichTextMarkdown(node.backMarkdown) ||
+    !node.children.some((child) => child.isCardItem)
+  ) {
     return false;
   }
 
@@ -29,6 +69,10 @@ function isFormalDefinition(node: ExportNode): boolean {
 }
 
 function flattenAnswer(node: ExportNode): string[] {
+  if (isQueryNode(node)) {
+    return [];
+  }
+
   const ownContent = nodeOwnContent(node);
   const parts = ownContent ? [ownContent] : [];
 
@@ -40,26 +84,31 @@ function flattenAnswer(node: ExportNode): string[] {
 }
 
 function serializeNode(node: ExportNode, depth: number): string[] {
+  if (isQueryNode(node)) {
+    return [];
+  }
+
   const front = cleanRichTextMarkdown(node.frontMarkdown);
   const back = cleanRichTextMarkdown(node.backMarkdown);
   let ownContent = nodeOwnContent(node);
 
   if (isFormalDefinition(node)) {
     const answer = node.children.flatMap(flattenAnswer).join(' ').trim();
-    ownContent = `${front};;${answer}`;
-  } else if (front && !back && node.isCardItem && node.children.length > 0) {
-    ownContent = `${front} >>>`;
+    ownContent = `${headingPrefix(node)}${front};;${answer}`;
+  } else if (
+    front &&
+    !back &&
+    node.children.some((child) => child.isCardItem)
+  ) {
+    ownContent = `${headingPrefix(node)}${front}   >>>`;
   }
 
   const lines: string[] = [];
-  const hasOwnLine = Boolean(ownContent);
-
-  if (hasOwnLine) {
-    lines.push(`${'  '.repeat(depth)}- ${ownContent}`);
-  }
+  const blockMathGap = ownContent.trimStart().startsWith('$$') ? ' ' : '';
+  lines.push(`${INDENT.repeat(depth)}- ${blockMathGap}${ownContent}`);
 
   if (!isFormalDefinition(node)) {
-    const childDepth = hasOwnLine ? depth + 1 : depth;
+    const childDepth = ownContent ? depth + 1 : depth;
     for (const child of node.children) {
       lines.push(...serializeNode(child, childDepth));
     }
@@ -69,5 +118,29 @@ function serializeNode(node: ExportNode, depth: number): string[] {
 }
 
 export function serializeDocument(root: ExportNode): string {
-  return serializeNode(root, 0).join('\n');
+  const rootFront = cleanRichTextMarkdown(root.frontMarkdown).trimEnd();
+  const lines = [`- # ${rootFront}`];
+
+  for (const child of root.children) {
+    const childFront = cleanRichTextMarkdown(child.frontMarkdown).trimEnd();
+    const isDuplicateDocumentHeading =
+      visibleMatchText(childFront) === visibleMatchText(rootFront);
+
+    if (isDuplicateDocumentHeading) {
+      for (const grandchild of child.children) {
+        lines.push(...serializeNode(grandchild, 1));
+      }
+    } else {
+      const depth = child.fontSize === 'H1' || !childFront ? 0 : 1;
+      lines.push(...serializeNode(child, depth));
+    }
+  }
+
+  return lines.join('\n');
+}
+
+function isQueryNode(node: ExportNode): boolean {
+  return visibleMatchText(cleanRichTextMarkdown(node.frontMarkdown)).startsWith(
+    'query:'
+  );
 }

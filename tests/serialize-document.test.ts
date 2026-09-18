@@ -11,13 +11,15 @@ function node(
     id: frontMarkdown || 'empty',
     frontMarkdown,
     isCardItem: false,
+    remType: 0,
+    practiceDirection: 'forward',
     children: [],
     ...options,
   };
 }
 
 describe('serializeDocument', () => {
-  it('includes the document root and preserves hierarchy and sibling order', () => {
+  it('renders the document as H1 and uses four-space hierarchy indentation', () => {
     const tree = node('Document title', {
       children: [
         node('First child', { children: [node('Grandchild')] }),
@@ -26,87 +28,176 @@ describe('serializeDocument', () => {
     });
 
     expect(serializeDocument(tree)).toBe(
-      '- Document title\n  - First child\n    - Grandchild\n  - Second child'
+      '- # Document title\n    - First child\n        - Grandchild\n    - Second child'
     );
   });
 
-  it('promotes descendants of an empty Rem without adding an indentation level', () => {
+  it('preserves empty top-level separators', () => {
     const tree = node('Document', {
-      children: [node('', { children: [node('Visible child')] })],
+      children: [node('', { children: [node('Section', { fontSize: 'H1' })] })],
     });
 
-    expect(serializeDocument(tree)).toBe('- Document\n  - Visible child');
+    expect(serializeDocument(tree)).toBe('- # Document\n- \n- # Section');
   });
 
-  it('renders front and back text directly as a normalized card', () => {
-    const tree = node('Question', { backMarkdown: 'Answer', isCardItem: true });
-
-    expect(serializeDocument(tree)).toBe('- Question;;Answer');
-  });
-
-  it('marks an ordinary child-based card as multiline', () => {
-    const tree = node('Question', {
-      isCardItem: true,
-      children: [node('Answer detail')],
+  it('renders a basic forward card with the AI arrow delimiter', () => {
+    const tree = node('Document', {
+      children: [node('Question', { backMarkdown: 'Answer' })],
     });
 
-    expect(serializeDocument(tree)).toBe('- Question >>>\n  - Answer detail');
+    expect(serializeDocument(tree)).toBe('- # Document\n    - Question→Answer');
   });
 
-  it('flattens a formal definition card structurally', () => {
-    const tree = node('Formal Definition', {
-      isCardItem: true,
+  it('uses RemNote concept and descriptor delimiters', () => {
+    const tree = node('Document', {
       children: [
-        node('first answer part'),
-        node('second answer part', { children: [node('nested detail')] }),
+        node('Concept', {
+          backMarkdown: 'Definition',
+          remType: 1,
+          practiceDirection: 'both',
+        }),
+        node('descriptor', {
+          backMarkdown: 'value',
+          remType: 2,
+          practiceDirection: 'forward',
+        }),
+        node('disabled descriptor', {
+          backMarkdown: 'value',
+          remType: 2,
+          practiceDirection: 'none',
+        }),
+        node('Question', { backMarkdown: 'Answer' }),
       ],
     });
 
     expect(serializeDocument(tree)).toBe(
-      '- Formal Definition;;first answer part second answer part nested detail'
+      '- # Document\n' +
+        '    - Concept::Definition\n' +
+        '    - descriptor;;value\n' +
+        '    - disabled descriptor;-value\n' +
+        '    - Question→Answer'
+    );
+  });
+
+  it('marks an ordinary child-based card as multiline', () => {
+    const tree = node('Document', {
+      children: [
+        node('Question', {
+          children: [node('Answer detail', { isCardItem: true })],
+        }),
+      ],
+    });
+
+    expect(serializeDocument(tree)).toBe(
+      '- # Document\n    - Question   >>>\n        - Answer detail'
+    );
+  });
+
+  it('flattens a formal definition card structurally', () => {
+    const formalDefinition = node('Formal Definition', {
+      children: [
+        node('first answer part', { isCardItem: true }),
+        node('second answer part', { children: [node('nested detail')] }),
+      ],
+    });
+    const tree = node('Document', { children: [formalDefinition] });
+
+    expect(serializeDocument(tree)).toBe(
+      '- # Document\n    - Formal Definition;;first answer part second answer part nested detail'
     );
   });
 
   it('does not flatten a non-card heading named formal definition', () => {
-    const tree = node('formal definition', {
-      children: [node('ordinary child')],
-    });
-
-    expect(serializeDocument(tree)).toBe('- formal definition\n  - ordinary child');
-  });
-
-  it('does not flatten a formal definition with explicit back text', () => {
-    const tree = node('formal definition', {
-      backMarkdown: 'direct answer',
-      isCardItem: true,
-      children: [node('extra detail')],
-    });
-
-    expect(serializeDocument(tree)).toBe(
-      '- formal definition;;direct answer\n  - extra detail'
-    );
-  });
-
-  it('cleans rich text in fronts, backs, and flattened answers', () => {
-    const tree = node('formal definition #[[Tag]]', {
-      isCardItem: true,
+    const tree = node('Document', {
       children: [
-        node('{{c1::visible}}'),
-        node('[label](https://example.com)'),
-        node('![omit](image.png)'),
+        node('formal definition', { children: [node('ordinary child')] }),
       ],
     });
 
     expect(serializeDocument(tree)).toBe(
-      '- formal definition;;visible label'
+      '- # Document\n    - formal definition\n        - ordinary child'
     );
   });
 
-  it('returns an empty string for an entirely empty tree', () => {
-    expect(serializeDocument(node(''))).toBe('');
+  it('does not flatten a formal definition with explicit back text', () => {
+    const tree = node('Document', {
+      children: [
+        node('formal definition', {
+          backMarkdown: 'direct answer',
+          children: [node('extra detail', { isCardItem: true })],
+        }),
+      ],
+    });
+
+    expect(serializeDocument(tree)).toBe(
+      '- # Document\n' +
+        '    - formal definition→direct answer\n' +
+        '        - extra detail'
+    );
+  });
+
+  it('cleans rich text in fronts, backs, and flattened answers', () => {
+    const tree = node('Document', {
+      children: [
+        node('formal definition #[[Tag]]', {
+          children: [
+            node('{{c1::visible}}', { isCardItem: true }),
+            node('[label](https://example.com)'),
+            node('![omit](image.png)'),
+          ],
+        }),
+      ],
+    });
+
+    expect(serializeDocument(tree)).toBe(
+      '- # Document\n    - formal definition;;visible label'
+    );
+  });
+
+  it('suppresses a duplicate first H1 while retaining its children', () => {
+    const tree = node('Waves', {
+      children: [
+        node('Waves', {
+          fontSize: 'H1',
+          children: [node('Wave')],
+        }),
+        node('Next section', { fontSize: 'H1' }),
+      ],
+    });
+
+    expect(serializeDocument(tree)).toBe(
+      '- # Waves\n    - Wave\n- # Next section'
+    );
+  });
+
+  it('omits query artifacts', () => {
+    const tree = node('Document', {
+      children: [node('Visible'), node('query:Visible')],
+    });
+
+    expect(serializeDocument(tree)).toBe('- # Document\n    - Visible');
+  });
+
+  it('compacts block math and leaves one space before it on card backs', () => {
+    const tree = node('Document', {
+      children: [
+        node('formula', {
+          backMarkdown: '$$\n x = y\n$$',
+          remType: 2,
+        }),
+      ],
+    });
+
+    expect(serializeDocument(tree)).toBe(
+      '- # Document\n    - formula;; $$x = y$$'
+    );
+  });
+
+  it('renders an empty document heading', () => {
+    expect(serializeDocument(node(''))).toBe('- # ');
   });
 
   it('does not append a trailing newline', () => {
-    expect(serializeDocument(node('Document'))).toBe('- Document');
+    expect(serializeDocument(node('Document'))).toBe('- # Document');
   });
 });
