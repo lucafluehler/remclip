@@ -1,29 +1,39 @@
-.remclip-widget {
-  display: flex;
-  align-items: center;
-  min-height: 30px;
-  padding: 2px 0;
+html,
+body,
+#root {
+  background: #000 !important;
 }
 
-.remclip-button {
+.remclip-widget {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  border: 1px solid var(--rn-clr-border-primary, rgba(127, 127, 127, 0.32));
-  border-radius: 6px;
-  background: var(--rn-clr-background-secondary, transparent);
-  color: var(--rn-clr-content-primary, inherit);
-  cursor: pointer;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 20px;
-  padding: 2px 8px;
-  transition: background-color 120ms ease, border-color 120ms ease, opacity 120ms ease;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: #000 !important;
 }
 
-.remclip-button:hover:not(:disabled) {
-  background: var(--rn-clr-background-tertiary, rgba(127, 127, 127, 0.12));
+button.remclip-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 6px;
+  background: #000 !important;
+  background-color: #000 !important;
+  background-image: none !important;
+  color: #d4d4dc !important;
+  cursor: pointer;
+  padding: 6px;
+  transition: background-color 120ms ease, opacity 120ms ease;
+}
+
+button.remclip-button:hover:not(:disabled) {
+  background: #000 !important;
+  background-color: #000 !important;
+  opacity: 1;
 }
 
 .remclip-button:focus-visible {
@@ -33,11 +43,25 @@
 
 .remclip-button:disabled {
   cursor: wait;
-  opacity: 0.6;
+  opacity: 0.55;
 }
 
 .remclip-icon {
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   flex: none;
+  background: transparent !important;
+}
+
+.remclip-button:disabled .remclip-icon {
+  animation: remclip-pulse 800ms ease-in-out infinite alternate;
+}
+
+@keyframes remclip-pulse {
+  from {
+    opacity: 0.4;
+  }
+  to {
+    opacity: 1;
+  }
 }
