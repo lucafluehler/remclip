@@ -57,15 +57,12 @@ function visibleMatchText(markdown: string): string {
     .toLocaleLowerCase();
 }
 
-function isFormalDefinition(node: ExportNode): boolean {
-  if (
-    cleanRichTextMarkdown(node.backMarkdown) ||
-    !node.children.some((child) => child.isCardItem)
-  ) {
-    return false;
-  }
-
-  return visibleMatchText(cleanRichTextMarkdown(node.frontMarkdown)) === 'formal definition';
+function isMultilineDescriptor(node: ExportNode): boolean {
+  return (
+    node.remType === DESCRIPTOR_REM_TYPE &&
+    !cleanRichTextMarkdown(node.backMarkdown) &&
+    node.children.some((child) => child.isCardItem)
+  );
 }
 
 function flattenAnswer(node: ExportNode): string[] {
@@ -92,9 +89,9 @@ function serializeNode(node: ExportNode, depth: number): string[] {
   const back = cleanRichTextMarkdown(node.backMarkdown);
   let ownContent = nodeOwnContent(node);
 
-  if (isFormalDefinition(node)) {
+  if (isMultilineDescriptor(node)) {
     const answer = node.children.flatMap(flattenAnswer).join(' ').trim();
-    ownContent = `${headingPrefix(node)}${front};;${answer}`;
+    ownContent = `${headingPrefix(node)}${front}${cardDelimiter(node)}${answer}`;
   } else if (
     front &&
     !back &&
@@ -107,7 +104,7 @@ function serializeNode(node: ExportNode, depth: number): string[] {
   const blockMathGap = ownContent.trimStart().startsWith('$$') ? ' ' : '';
   lines.push(`${INDENT.repeat(depth)}- ${blockMathGap}${ownContent}`);
 
-  if (!isFormalDefinition(node)) {
+  if (!isMultilineDescriptor(node)) {
     const childDepth = ownContent ? depth + 1 : depth;
     for (const child of node.children) {
       lines.push(...serializeNode(child, childDepth));

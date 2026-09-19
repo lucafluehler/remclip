@@ -24,7 +24,7 @@ RemClip:
 - Collapses block math to one physical line without padding inside `$$`.
 - Removes blank lines and joins continuation lines.
 - Removes `query:` artifacts introduced by multiline-card structures.
-- Flattens multiline `formal definition` cards into a single `;;` card.
+- Flattens multiline Descriptor cards into compact single-line cards.
 
 It does not modify the knowledge base, send analytics, call an AI service, or make external network requests.
 

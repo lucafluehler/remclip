@@ -93,36 +93,41 @@ describe('serializeDocument', () => {
     );
   });
 
-  it('flattens a formal definition card structurally', () => {
-    const formalDefinition = node('Formal Definition', {
+  it('flattens any multiline descriptor card structurally', () => {
+    const definition = node('definition', {
+      remType: 2,
       children: [
         node('first answer part', { isCardItem: true }),
         node('second answer part', { children: [node('nested detail')] }),
       ],
     });
-    const tree = node('Document', { children: [formalDefinition] });
+    const tree = node('Document', { children: [definition] });
 
     expect(serializeDocument(tree)).toBe(
-      '- # Document\n    - Formal Definition;;first answer part second answer part nested detail'
+      '- # Document\n    - definition;;first answer part second answer part nested detail'
     );
   });
 
-  it('does not flatten a non-card heading named formal definition', () => {
+  it('does not flatten an ordinary descriptor with child notes', () => {
     const tree = node('Document', {
       children: [
-        node('formal definition', { children: [node('ordinary child')] }),
+        node('details', {
+          remType: 2,
+          children: [node('ordinary child')],
+        }),
       ],
     });
 
     expect(serializeDocument(tree)).toBe(
-      '- # Document\n    - formal definition\n        - ordinary child'
+      '- # Document\n    - details\n        - ordinary child'
     );
   });
 
-  it('does not flatten a formal definition with explicit back text', () => {
+  it('does not flatten a descriptor with explicit back text', () => {
     const tree = node('Document', {
       children: [
-        node('formal definition', {
+        node('definition', {
+          remType: 2,
           backMarkdown: 'direct answer',
           children: [node('extra detail', { isCardItem: true })],
         }),
@@ -131,15 +136,16 @@ describe('serializeDocument', () => {
 
     expect(serializeDocument(tree)).toBe(
       '- # Document\n' +
-        '    - formal definition→direct answer\n' +
+        '    - definition;;direct answer\n' +
         '        - extra detail'
     );
   });
 
-  it('cleans rich text in fronts, backs, and flattened answers', () => {
+  it('cleans rich text in flattened descriptor answers', () => {
     const tree = node('Document', {
       children: [
-        node('formal definition #[[Tag]]', {
+        node('explanation #[[Tag]]', {
+          remType: 2,
           children: [
             node('{{c1::visible}}', { isCardItem: true }),
             node('[label](https://example.com)'),
@@ -150,8 +156,22 @@ describe('serializeDocument', () => {
     });
 
     expect(serializeDocument(tree)).toBe(
-      '- # Document\n    - formal definition;;visible label'
+      '- # Document\n    - explanation;;visible label'
     );
+  });
+
+  it('preserves the practice direction of a flattened descriptor', () => {
+    const tree = node('Document', {
+      children: [
+        node('source', {
+          remType: 2,
+          practiceDirection: 'backward',
+          children: [node('answer', { isCardItem: true })],
+        }),
+      ],
+    });
+
+    expect(serializeDocument(tree)).toBe('- # Document\n    - source;<answer');
   });
 
   it('suppresses a duplicate first H1 while retaining its children', () => {
