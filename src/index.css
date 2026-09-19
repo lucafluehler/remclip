@@ -4,14 +4,14 @@ body,
   background: transparent !important;
 }
 
-/* RemNote propagates its light/dark state into sandboxed widgets by adding
-   one of these classes to the widget body. Eclipse uses #000 in dark mode. */
+/* RemNote injects active theme CSS into sandboxed widgets. Eclipse defines
+   --bg-primary as OLED black; otherwise match RemNote's standard dark pane. */
 body.dark,
 body.dark #root,
 body.dark .remclip-widget,
 body.dark button.remclip-button {
-  background: #000 !important;
-  background-color: #000 !important;
+  background: var(--bg-primary, #202127) !important;
+  background-color: var(--bg-primary, #202127) !important;
 }
 
 .remclip-widget {
