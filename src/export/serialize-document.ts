@@ -117,6 +117,10 @@ function serializeNode(node: ExportNode, depth: number): string[] {
   return lines;
 }
 
+export function serializeRemTrees(roots: readonly ExportNode[]): string {
+  return roots.flatMap((root) => serializeNode(root, 0)).join('\n');
+}
+
 export function serializeDocument(root: ExportNode): string {
   const rootFront = cleanRichTextMarkdown(root.frontMarkdown).trimEnd();
   const lines = [`- # ${rootFront}`];

@@ -6,12 +6,12 @@
   "repoUrl": "https://github.com/lucafluehler/remclip",
   "version": {
     "major": 0,
-    "minor": 1,
-    "patch": 1
+    "minor": 2,
+    "patch": 0
   },
   "theme": [],
   "enableOnMobile": false,
-  "description": "Copy the current document as clean, AI-friendly Markdown.",
+  "description": "Copy selected content or the current document as clean, AI-friendly Markdown.",
   "requestNative": false,
   "requiredScopes": [
     {

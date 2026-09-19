@@ -1,7 +1,7 @@
 import { renderWidget, usePlugin, WidgetLocation } from '@remnote/plugin-sdk';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
-import { exportDocument } from '../export/copy-document';
+import { exportSelectionOrDocument } from '../export/copy-document';
 import { writeClipboardText } from '../export/write-clipboard';
 import '../index.css';
 
@@ -28,6 +28,18 @@ function CopyAiMarkdownWidget() {
   const plugin = usePlugin();
   const [isCopying, setIsCopying] = useState(false);
   const [preparedMarkdown, setPreparedMarkdown] = useState<string>();
+  const selectionPromiseRef = useRef<
+    ReturnType<typeof plugin.editor.getSelection> | undefined
+  >();
+
+  const captureSelection = () => {
+    // Start reading before the button receives focus so RemNote's editor
+    // selection is still available when the click is handled.
+    selectionPromiseRef.current = plugin.editor.getSelection().catch((error) => {
+      console.warn('RemClip could not capture the current selection.', error);
+      return undefined;
+    });
+  };
 
   const handleCopy = async () => {
     if (isCopying) {
@@ -48,8 +60,9 @@ function CopyAiMarkdownWidget() {
 
       const context = await plugin.widget.getWidgetContext<WidgetLocation.PaneHeader>();
       const documentId = await plugin.window.getOpenPaneRemId(context.paneId);
+      const selection = await selectionPromiseRef.current;
       const markdown = documentId
-        ? await exportDocument(plugin, documentId)
+        ? await exportSelectionOrDocument(plugin, documentId, selection)
         : undefined;
 
       if (markdown === undefined) {
@@ -66,7 +79,7 @@ function CopyAiMarkdownWidget() {
         await plugin.app.toast('Markdown ready. Click the clipboard again to copy.');
       }
     } catch (error) {
-      console.error('RemClip could not copy the document.', error);
+      console.error('RemClip could not copy Markdown.', error);
       const fallbackMessage =
         error instanceof DOMException && error.name === 'NotAllowedError'
           ? 'Clipboard access was denied.'
@@ -74,6 +87,7 @@ function CopyAiMarkdownWidget() {
       const detail = error instanceof Error ? error.message : '';
       await plugin.app.toast(detail ? `${fallbackMessage} ${detail}` : fallbackMessage);
     } finally {
+      selectionPromiseRef.current = undefined;
       setIsCopying(false);
     }
   };
@@ -91,6 +105,7 @@ function CopyAiMarkdownWidget() {
         className="remclip-button"
         disabled={isCopying}
         onClick={handleCopy}
+        onMouseDown={captureSelection}
         title={
           isCopying
             ? 'Copying AI Markdown...'

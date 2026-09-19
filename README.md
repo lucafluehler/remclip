@@ -1,13 +1,16 @@
 # RemClip
 
-RemClip is a small, read-only RemNote plugin that copies the current document as compact, AI-friendly Markdown.
+RemClip is a small, read-only RemNote plugin that copies selected content or the current document as compact, AI-friendly Markdown.
 
-The plugin adds a compact clipboard icon to RemNote's document header alongside its built-in controls. It reads the document in the focused pane, serializes its Rem hierarchy, cleans exporter-specific syntax, writes the result to the clipboard, and displays a toast.
+The plugin adds a compact clipboard icon to RemNote's document header alongside its built-in controls. It prioritizes selected text, then selected Rems, and otherwise reads the document or folder in that pane. It serializes Rem hierarchy, cleans exporter-specific syntax, writes the result to the clipboard, and displays a toast.
 
 ## Output behavior
 
 RemClip:
 
+- Copies only selected text when a text range is selected.
+- Copies selected Rems and their descendants in visible order, without duplicating descendants whose parent is also selected.
+- Falls back to the current document or folder when nothing is selected.
 - Preserves the document hierarchy as four-space-indented Markdown bullets.
 - Preserves H1/H2/H3 headings and the document-title heading.
 - Preserves RemNote card semantics: concepts (`::`), descriptors (`;;`),

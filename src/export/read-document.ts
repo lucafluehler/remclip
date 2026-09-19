@@ -1,4 +1,8 @@
-import type { PluginRem, RNPlugin } from '@remnote/plugin-sdk';
+import type {
+  PluginRem,
+  RichTextInterface,
+  RNPlugin,
+} from '@remnote/plugin-sdk';
 
 import type { ExportNode } from './types';
 
@@ -10,9 +14,9 @@ async function readOr<T>(operation: () => Promise<T>, fallback: T): Promise<T> {
   }
 }
 
-async function richTextToMarkdown(
+export async function richTextToMarkdown(
   plugin: RNPlugin,
-  richText: PluginRem['text']
+  richText: RichTextInterface | undefined
 ): Promise<string> {
   if (!richText) {
     return '';
@@ -79,10 +83,17 @@ async function readNode(
   };
 }
 
+export async function readRemTree(
+  plugin: RNPlugin,
+  rem: PluginRem
+): Promise<ExportNode> {
+  return readNode(plugin, rem, new Set());
+}
+
 export async function readDocumentTree(
   plugin: RNPlugin,
   documentId: string
 ): Promise<ExportNode | undefined> {
   const document = await plugin.rem.findOne(documentId);
-  return document ? readNode(plugin, document, new Set()) : undefined;
+  return document ? readRemTree(plugin, document) : undefined;
 }
