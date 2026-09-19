@@ -1,7 +1,17 @@
 html,
 body,
 #root {
+  background: transparent !important;
+}
+
+/* RemNote propagates its light/dark state into sandboxed widgets by adding
+   one of these classes to the widget body. Eclipse uses #000 in dark mode. */
+body.dark,
+body.dark #root,
+body.dark .remclip-widget,
+body.dark button.remclip-button {
   background: #000 !important;
+  background-color: #000 !important;
 }
 
 .remclip-widget {
@@ -10,7 +20,7 @@ body,
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: #000 !important;
+  background: transparent !important;
 }
 
 button.remclip-button {
@@ -21,19 +31,18 @@ button.remclip-button {
   height: 30px;
   border: 0;
   border-radius: 6px;
-  background: #000 !important;
-  background-color: #000 !important;
+  background: transparent !important;
+  background-color: transparent !important;
   background-image: none !important;
-  color: #d4d4dc !important;
+  color: inherit !important;
   cursor: pointer;
   padding: 6px;
   transition: background-color 120ms ease, opacity 120ms ease;
 }
 
 button.remclip-button:hover:not(:disabled) {
-  background: #000 !important;
-  background-color: #000 !important;
-  opacity: 1;
+  background: rgba(127, 127, 127, 0.16) !important;
+  background-color: rgba(127, 127, 127, 0.16) !important;
 }
 
 .remclip-button:focus-visible {

@@ -25,6 +25,14 @@ RemClip:
 
 It does not modify the knowledge base, send analytics, call an AI service, or make external network requests.
 
+## Permissions and privacy
+
+RemClip runs in RemNote's sandbox and requests read-only access to the knowledge
+base so it can export whichever document the user chooses. Document content is
+processed locally and is written only to the user's clipboard after they click
+the plugin button. RemClip does not request native access, modify notes, persist
+document content, or transmit data over the network.
+
 ## Requirements
 
 - Node.js 22 or a compatible current LTS release

@@ -9,17 +9,37 @@ afterEach(() => {
 });
 
 describe('copyCurrentDocument', () => {
-  it('prefers Electron native clipboard access when available', async () => {
-    const nativeWriteText = vi.fn();
+  it('prefers the synchronous sandbox clipboard path when available', async () => {
+    const execCommand = vi.fn().mockReturnValue(true);
     const browserWriteText = vi.fn();
-    vi.stubGlobal('window', {
-      require: vi.fn().mockReturnValue({ clipboard: { writeText: nativeWriteText } }),
+    const textarea = {
+      value: '',
+      style: {},
+      setAttribute: vi.fn(),
+      select: vi.fn(),
+      setSelectionRange: vi.fn(),
+      remove: vi.fn(),
+    };
+    vi.stubGlobal('document', {
+      body: { appendChild: vi.fn() },
+      createElement: vi.fn().mockReturnValue(textarea),
+      execCommand,
     });
     vi.stubGlobal('navigator', { clipboard: { writeText: browserWriteText } });
 
-    await expect(writeClipboardText('native copy')).resolves.toBeUndefined();
-    expect(nativeWriteText).toHaveBeenCalledWith('native copy');
+    await expect(writeClipboardText('sandbox copy')).resolves.toBeUndefined();
+    expect(execCommand).toHaveBeenCalledWith('copy');
+    expect(textarea.value).toBe('sandbox copy');
     expect(browserWriteText).not.toHaveBeenCalled();
+  });
+
+  it('uses the async browser clipboard when the synchronous path is unavailable', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('document', undefined);
+    vi.stubGlobal('navigator', { clipboard: { writeText } });
+
+    await expect(writeClipboardText('browser copy')).resolves.toBeUndefined();
+    expect(writeText).toHaveBeenCalledWith('browser copy');
   });
 
   it('returns missing-document when the focused pane has no Rem', async () => {
@@ -64,10 +84,8 @@ describe('copyCurrentDocument', () => {
     expect(writeText).toHaveBeenCalledWith('- # Document title');
   });
 
-  it('falls back when the async clipboard API is denied', async () => {
-    const writeText = vi
-      .fn()
-      .mockRejectedValue(new DOMException('Denied', 'NotAllowedError'));
+  it('copies through the synchronous sandbox path after document export', async () => {
+    const writeText = vi.fn();
     const execCommand = vi.fn().mockReturnValue(true);
     const remove = vi.fn();
     const textarea = {
@@ -110,6 +128,7 @@ describe('copyCurrentDocument', () => {
     await expect(copyCurrentDocument(plugin)).resolves.toBe('copied');
     expect(execCommand).toHaveBeenCalledWith('copy');
     expect(textarea.value).toBe('- # Document title');
+    expect(writeText).not.toHaveBeenCalled();
     expect(remove).toHaveBeenCalledOnce();
   });
 });

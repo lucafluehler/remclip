@@ -1,8 +1,8 @@
 import { renderWidget, usePlugin, WidgetLocation } from '@remnote/plugin-sdk';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
-import { copyPaneDocument } from '../export/copy-document';
-import '../style.css';
+import { exportDocument } from '../export/copy-document';
+import { writeClipboardText } from '../export/write-clipboard';
 import '../index.css';
 
 function ClipboardIcon() {
@@ -27,33 +27,7 @@ function ClipboardIcon() {
 function CopyAiMarkdownWidget() {
   const plugin = usePlugin();
   const [isCopying, setIsCopying] = useState(false);
-
-  useEffect(() => {
-    if (!plugin.isNative || !plugin.mountDiv) {
-      return;
-    }
-
-    let widgetHost: HTMLElement | null = plugin.mountDiv;
-
-    // PaneHeader widgets are appended after RemNote's overflow menu. In native
-    // mode, move this widget host left by one sibling to sit before that menu.
-    for (let level = 0; level < 4 && widgetHost; level += 1) {
-      if (
-        widgetHost.previousElementSibling &&
-        widgetHost.nextElementSibling &&
-        widgetHost.dataset.remclipPositioned !== 'true'
-      ) {
-        widgetHost.parentElement?.insertBefore(
-          widgetHost,
-          widgetHost.previousElementSibling
-        );
-        widgetHost.dataset.remclipPositioned = 'true';
-        break;
-      }
-
-      widgetHost = widgetHost.parentElement;
-    }
-  }, [plugin]);
+  const [preparedMarkdown, setPreparedMarkdown] = useState<string>();
 
   const handleCopy = async () => {
     if (isCopying) {
@@ -63,15 +37,34 @@ function CopyAiMarkdownWidget() {
     setIsCopying(true);
 
     try {
-      const context = await plugin.widget.getWidgetContext<WidgetLocation.PaneHeader>();
-      const result = await copyPaneDocument(plugin, context.paneId);
+      // A retry starts the clipboard write directly from the click handler,
+      // preserving browser user activation in strict sandbox environments.
+      if (preparedMarkdown !== undefined) {
+        await writeClipboardText(preparedMarkdown);
+        setPreparedMarkdown(undefined);
+        await plugin.app.toast('AI Markdown copied.');
+        return;
+      }
 
-      if (result === 'missing-document') {
+      const context = await plugin.widget.getWidgetContext<WidgetLocation.PaneHeader>();
+      const documentId = await plugin.window.getOpenPaneRemId(context.paneId);
+      const markdown = documentId
+        ? await exportDocument(plugin, documentId)
+        : undefined;
+
+      if (markdown === undefined) {
         await plugin.app.toast('Could not find the current document.');
         return;
       }
 
-      await plugin.app.toast('AI Markdown copied.');
+      try {
+        await writeClipboardText(markdown);
+        await plugin.app.toast('AI Markdown copied.');
+      } catch (error) {
+        setPreparedMarkdown(markdown);
+        console.warn('RemClip needs a direct click to access the clipboard.', error);
+        await plugin.app.toast('Markdown ready. Click the clipboard again to copy.');
+      }
     } catch (error) {
       console.error('RemClip could not copy the document.', error);
       const fallbackMessage =
@@ -88,11 +81,23 @@ function CopyAiMarkdownWidget() {
   return (
     <div className="remclip-widget">
       <button
-        aria-label={isCopying ? 'Copying AI Markdown' : 'Copy AI Markdown'}
+        aria-label={
+          isCopying
+            ? 'Copying AI Markdown'
+            : preparedMarkdown !== undefined
+              ? 'Copy prepared AI Markdown'
+              : 'Copy AI Markdown'
+        }
         className="remclip-button"
         disabled={isCopying}
         onClick={handleCopy}
-        title={isCopying ? 'Copying AI Markdown...' : 'Copy AI Markdown'}
+        title={
+          isCopying
+            ? 'Copying AI Markdown...'
+            : preparedMarkdown !== undefined
+              ? 'Click again to copy AI Markdown'
+              : 'Copy AI Markdown'
+        }
         type="button"
       >
         <ClipboardIcon />

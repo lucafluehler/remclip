@@ -1,33 +1,3 @@
-type ElectronClipboardModule = {
-  clipboard?: {
-    writeText(text: string): void;
-  };
-};
-
-type WindowWithNativeRequire = Window & {
-  require?: (moduleName: string) => ElectronClipboardModule;
-};
-
-function copyWithElectron(text: string): boolean {
-  if (typeof window === 'undefined') {
-    return false;
-  }
-
-  try {
-    const nativeRequire = (window as WindowWithNativeRequire).require;
-    const clipboard = nativeRequire?.('electron').clipboard;
-
-    if (!clipboard) {
-      return false;
-    }
-
-    clipboard.writeText(text);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 function copyWithExecCommand(text: string): boolean {
   if (
     typeof document === 'undefined' ||
@@ -57,7 +27,9 @@ function copyWithExecCommand(text: string): boolean {
 export async function writeClipboardText(text: string): Promise<void> {
   let clipboardError: unknown;
 
-  if (copyWithElectron(text)) {
+  // This synchronous path works from a direct click inside RemNote's sandbox
+  // without requesting access to the host page or Electron.
+  if (copyWithExecCommand(text)) {
     return;
   }
 
@@ -68,10 +40,6 @@ export async function writeClipboardText(text: string): Promise<void> {
     }
   } catch (error) {
     clipboardError = error;
-  }
-
-  if (copyWithExecCommand(text)) {
-    return;
   }
 
   if (clipboardError) {
