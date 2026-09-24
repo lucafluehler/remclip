@@ -34,7 +34,6 @@ button.remclip-button {
   background: transparent !important;
   background-color: transparent !important;
   background-image: none !important;
-  color: inherit !important;
   cursor: pointer;
   padding: 6px;
   transition: background-color 120ms ease, opacity 120ms ease;

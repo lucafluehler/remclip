@@ -102,7 +102,7 @@ function CopyAiMarkdownWidget() {
               ? 'Copy prepared AI Markdown'
               : 'Copy AI Markdown'
         }
-        className="remclip-button"
+        className="remclip-button rn-clr-content-secondary"
         disabled={isCopying}
         onClick={handleCopy}
         onMouseDown={captureSelection}
