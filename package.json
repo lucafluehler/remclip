@@ -1,13 +1,14 @@
 {
   "private": true,
   "name": "remclip",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "license": "UNLICENSED",
   "scripts": {
     "check-types": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
     "dev": "cross-env NODE_ENV=development webpack-dev-server --color --progress --no-open",
+    "preview": "node scripts/serve-dist.mjs",
     "build": "shx rm -rf dist && cross-env NODE_ENV=production webpack --color --progress && cd dist && bestzip ../PluginZip.zip ./*",
     "validate": "remnote-plugin validate"
   },

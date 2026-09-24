@@ -67,6 +67,13 @@ const config = {
       const widgetName = queryParams["widgetName"];
       if (widgetName == undefined) {document.body.innerHTML += "Widget ID not specified.";}
 
+      if (widgetName && widgetName !== "index") {
+        const stylesheet = document.createElement('link');
+        stylesheet.rel = 'stylesheet';
+        stylesheet.href = widgetName + "${sandboxSuffix}.css";
+        document.head.appendChild(stylesheet);
+      }
+
       const script = document.createElement('script');
       script.type = "module";
       script.src = widgetName + "${sandboxSuffix}.js";

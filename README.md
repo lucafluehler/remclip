@@ -75,4 +75,26 @@ In RemNote, open **Settings → Plugins → Build**, choose **Develop from local
 http://localhost:8080
 ```
 
+## Test the production build
+
+`npm run dev` uses a development bundle that injects styles differently from
+the release build. Build the plugin, then serve the compiled `dist/` directory:
+
+```sh
+npm run build
+npm run preview
+```
+
+Stop `npm run dev` first, because both servers use port 8080. In RemNote, use
+**Settings → Plugins → Build → Develop from localhost** with
+`http://localhost:8080`. Disable the marketplace copy while testing to avoid
+two active copies.
+
+Check that the clipboard icon appears in the pane header and can be clicked in
+both light and dark themes. Copy a document, selected text, and selected Rems;
+confirm the clipboard content and success toast. Restart RemNote and check the
+button again to exercise registration after activation. Rebuild and reload the
+plugin after changes. A final check of the marketplace installation is still
+needed after publishing, because localhost uses a different origin.
+
 If a development plugin prevents RemNote from loading, open RemNote with `?disablePlugins` as described in the official plugin documentation.
